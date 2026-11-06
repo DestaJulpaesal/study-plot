@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyPilot — Asisten Belajar AI</title>
+  <meta name="description" content="StudyPilot adalah AI Agent yang membantu mahasiswa Indonesia mengelola tugas, deadline, dan jadwal belajar secara cerdas." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       HEADER / NAVBAR
+  ════════════════════════════════════════════════════════════════ -->
+  <header class="app-header" role="banner">
+    <div class="header-inner">
+      <div class="brand" aria-label="StudyPilot beranda">
+        <span class="brand-icon" aria-hidden="true">🎓</span>
+        <span class="brand-name">StudyPilot</span>
+        <span class="brand-badge">AI Agent</span>
+      </div>
+
+      <nav class="header-actions" aria-label="Aksi utama">
+        <!-- Agent Prompt Panel Toggle -->
+        <button class="btn-icon" id="btnPromptPanel" aria-label="Lihat arsitektur prompt agent" title="Lihat Prompt Agent">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+          <span class="btn-label">Prompt</span>
+        </button>
+
+        <!-- Dark/Light Mode Toggle -->
+        <button class="btn-icon" id="btnThemeToggle" aria-label="Ganti tema gelap/terang" title="Ganti Tema">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+
+        <!-- Reset Demo Data -->
+        <button class="btn-secondary btn-sm" id="btnReset" aria-label="Reset ke data demo awal">
+          Reset Demo
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       AGENT PROMPT PANEL (modal overlay)
+  ════════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay hidden" id="promptPanelOverlay" role="dialog" aria-modal="true" aria-labelledby="promptPanelTitle">
+    <div class="prompt-panel glass-panel">
+      <div class="panel-header">
+        <h2 id="promptPanelTitle">🧠 Arsitektur Prompt Agent</h2>
+        <button class="btn-icon" id="btnClosePrompt" aria-label="Tutup panel prompt">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <p class="panel-subtitle">Berikut adalah 4 layer prompt yang mengatur perilaku StudyPilot AI Agent. Arsitektur ini memastikan agent bekerja secara konsisten, akurat, dan bertanggung jawab.</p>
+      <div class="prompt-layers" id="promptLayersContainer">
+        <!-- Diisi dinamis oleh script.js dari agent-prompts.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       MAIN APP LAYOUT
+  ════════════════════════════════════════════════════════════════ -->
+  <main class="app-layout" role="main">
+
+    <!-- ── SIDEBAR ──────────────────────────────────────────────── -->
+    <aside class="sidebar" aria-label="Panel tugas dan jadwal">
+
+      <!-- Dashboard KPI Cards -->
+      <section class="kpi-section" aria-label="Ringkasan statistik tugas">
+        <h3 class="section-title">Dashboard</h3>
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-total" aria-label="Total tugas aktif">
+            <span class="kpi-icon" aria-hidden="true">📚</span>
+            <span class="kpi-value" id="kpiTotal">0</span>
+            <span class="kpi-label">Total Tugas</span>
+          </div>
+          <div class="kpi-card kpi-deadline" aria-label="Deadline terdekat">
+            <span class="kpi-icon" aria-hidden="true">⏰</span>
+            <span class="kpi-value" id="kpiDeadline">—</span>
+            <span class="kpi-label">Deadline Terdekat</span>
+          </div>
+          <div class="kpi-card kpi-progress" aria-label="Progres penyelesaian tugas">
+            <span class="kpi-icon" aria-hidden="true">✅</span>
+            <span class="kpi-value" id="kpiProgress">0%</span>
+            <span class="kpi-label">Selesai</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Task List -->
+      <section class="task-section" aria-label="Daftar tugas">
+        <div class="section-header">
+          <h3 class="section-title">Daftar Tugas</h3>
+          <span class="task-count-badge" id="taskCountBadge">0</span>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyTaskState" aria-live="polite">
+          <span class="empty-icon" aria-hidden="true">📭</span>
+          <p>Belum ada tugas. Minta StudyPilot untuk menambahkan tugas pertamamu!</p>
+        </div>
+
+        <ul class="task-list" id="taskList" aria-label="Daftar tugas aktif" role="list">
+          <!-- Diisi dinamis oleh script.js -->
+        </ul>
+      </section>
+
+      <!-- Weekly Study Plan -->
+      <section class="plan-section" aria-label="Jadwal belajar mingguan">
+        <div class="section-header">
+          <h3 class="section-title">Jadwal Belajar</h3>
+          <button class="btn-text" id="btnGeneratePlan" aria-label="Generate ulang jadwal belajar mingguan">Generate</button>
+        </div>
+
+        <!-- Empty State Plan -->
+        <div class="empty-state" id="emptyPlanState" aria-live="polite">
+          <span class="empty-icon" aria-hidden="true">🗓️</span>
+          <p>Klik "Generate" atau minta StudyPilot membuat jadwal belajarmu.</p>
+        </div>
+
+        <div class="plan-grid" id="studyPlanGrid" aria-label="Jadwal belajar per hari">
+          <!-- Diisi dinamis oleh script.js -->
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- ── CHAT AREA ─────────────────────────────────────────────── -->
+    <section class="chat-area" aria-label="Area percakapan dengan StudyPilot">
+
+      <!-- Chat Header -->
+      <div class="chat-header">
+        <div class="agent-info">
+          <div class="agent-avatar" aria-hidden="true">🎓</div>
+          <div>
+            <p class="agent-name">StudyPilot</p>
+            <p class="agent-status" id="agentStatus">
+              <span class="status-dot" aria-hidden="true"></span>Online &amp; Siap Membantu
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Feed -->
+      <div class="message-feed" id="messageFeed" role="log" aria-live="polite" aria-label="Riwayat percakapan">
+
+        <!-- Welcome / Empty Chat State -->
+        <div class="welcome-state" id="welcomeState" aria-label="Pesan sambutan">
+          <div class="welcome-avatar" aria-hidden="true">🎓</div>
+          <h2 class="welcome-title">Hei! Aku StudyPilot 👋</h2>
+          <p class="welcome-sub">Asisten belajar AI-mu untuk mengelola tugas, deadline, dan jadwal belajar. Apa yang bisa aku bantu hari ini?</p>
+          <div class="welcome-chips" role="list" aria-label="Pertanyaan populer">
+            <button class="chip" role="listitem" data-quick="Tambah Tugas Baru" aria-label="Tanya: Tambah Tugas Baru">➕ Tambah Tugas</button>
+            <button class="chip" role="listitem" data-quick="Buat Jadwal Belajar" aria-label="Tanya: Buat Jadwal Belajar">📅 Jadwal Belajar</button>
+            <button class="chip" role="listitem" data-quick="Prioritaskan Tugas" aria-label="Tanya: Prioritaskan Tugas">🔥 Prioritaskan</button>
+            <button class="chip" role="listitem" data-quick="Ringkas Materi" aria-label="Tanya: Ringkas Materi">📝 Ringkas Materi</button>
+            <button class="chip" role="listitem" data-quick="Cek Deadline Terdekat" aria-label="Tanya: Cek Deadline">⏰ Cek Deadline</button>
+          </div>
+        </div>
+
+        <!-- Typing Indicator (hidden by default) -->
+        <div class="typing-indicator hidden" id="typingIndicator" aria-label="StudyPilot sedang mengetik..." role="status">
+          <div class="agent-bubble-avatar" aria-hidden="true">🎓</div>
+          <div class="typing-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="quick-actions" role="toolbar" aria-label="Aksi cepat">
+        <button class="quick-btn" data-intent="tambahTugas" aria-label="Tambah tugas baru">➕ Tambah Tugas</button>
+        <button class="quick-btn" data-intent="buatJadwal" aria-label="Buat jadwal belajar">📅 Jadwal Belajar</button>
+        <button class="quick-btn" data-intent="prioritasTugas" aria-label="Prioritaskan tugas">🔥 Prioritas</button>
+        <button class="quick-btn" data-intent="ringkasMateri" aria-label="Ringkas materi">📝 Ringkas</button>
+        <button class="quick-btn" data-intent="pengingatDeadline" aria-label="Cek deadline terdekat">⏰ Deadline</button>
+      </div>
+
+      <!-- Chat Input -->
+      <form class="chat-input-area" id="chatForm" aria-label="Form kirim pesan" novalidate>
+        <label for="chatInput" class="sr-only">Ketik pesan ke StudyPilot</label>
+        <textarea
+          id="chatInput"
+          class="chat-input"
+          placeholder="Ketik pesan... (mis. &quot;Tambah tugas Kalkulus deadline Jumat&quot;)"
+          rows="1"
+          maxlength="500"
+          aria-required="true"
+          aria-describedby="inputHint"
+        ></textarea>
+        <button type="submit" class="btn-send" id="btnSend" aria-label="Kirim pesan">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </form>
+      <p class="input-hint" id="inputHint">Tekan Enter untuk kirim · Shift+Enter untuk baris baru</p>
+
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       ERROR TOAST
+  ════════════════════════════════════════════════════════════════ -->
+  <div class="error-toast hidden" id="errorToast" role="alert" aria-live="assertive">
+    <span class="toast-icon" aria-hidden="true">⚠️</span>
+    <span id="errorToastMsg">Terjadi kesalahan. Coba lagi.</span>
+    <button class="toast-close" id="btnToastClose" aria-label="Tutup notifikasi">✕</button>
+  </div>
+
+  <!-- Scripts — agent-prompts.js harus dimuat sebelum script.js -->
+  <script src="agent-prompts.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
